@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    // Restaurar backup envia o arquivo JSON numa Server Action (padrão: 1 MB).
+    // 4 MB fica abaixo do limite de requisição da Vercel (4,5 MB).
+    serverActions: { bodySizeLimit: "4mb" },
+  },
   turbopack: {
     rules: {
       "*.css": {

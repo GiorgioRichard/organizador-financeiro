@@ -91,6 +91,9 @@ npm test    # testes de money.ts e datas.ts (node --test, sem dependências)
 - Recuperar senha por e-mail e trocar a senha pelo menu do avatar.
 - PWA: instalável, ícones próprios, atalhos e tela "Sem conexão".
 - Relatório mensal em PDF (botão "Relatório PDF" no Extrato e no Orçamento).
+- Backup em JSON (Configurações → "Baixar backup") e restauração a partir do arquivo, na mesma
+  conta, numa conta nova ou em outro servidor. Os ids são recriados e as categorias de mesmo
+  nome são reaproveitadas; o arquivo é validado inteiro antes de qualquer dado ser apagado.
 - Testado como iPhone 15 (WebKit, motor do Safari) e Pixel 7 (Chrome Android): sem rolagem lateral, campos com 16px (sem zoom no iPhone), área segura do notch, PDF e service worker funcionando.
 
 ## Leis de UX aplicadas

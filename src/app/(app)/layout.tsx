@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import { KeyRound, LogOut } from "lucide-react";
+import { KeyRound, LogOut, Settings } from "lucide-react";
 import { sair } from "@/app/auth/actions";
 import { Rodape } from "@/components/rodape";
 import { exigirUsuario } from "@/lib/auth";
@@ -61,10 +61,10 @@ async function Avatar() {
         <div className="mt-4">
           <SeletorTema />
         </div>
-        <Link
-          href="/conta/senha"
-          className="mt-3 flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm hover:bg-tinta/5"
-        >
+        <Link href="/conta" className="mt-3 flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm hover:bg-tinta/5">
+          <Settings aria-hidden size={16} /> Configurações e backup
+        </Link>
+        <Link href="/conta/senha" className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm hover:bg-tinta/5">
           <KeyRound aria-hidden size={16} /> Alterar senha
         </Link>
         <form action={sair} className="mt-2">
