@@ -34,11 +34,14 @@ export async function cadastrar(_estado: EstadoForm, formData: FormData): Promis
   if (!r.success) return falha(formData, r.error.issues[0].message);
   if (formData.get("confirmacao") !== r.data.senha) return falha(formData, "As senhas não conferem");
 
+  // Na nuvem o Supabase confirma o e-mail: o link volta para /auth/confirmar,
+  // que cria a sessão e leva ao painel.
+  const origem = (await headers()).get("origin") ?? "http://localhost:3000";
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: r.data.email,
     password: r.data.senha,
-    options: { data: { nome: r.data.nome } },
+    options: { data: { nome: r.data.nome }, emailRedirectTo: `${origem}/auth/confirmar?proximo=/dashboard` },
   });
   if (error) return falha(formData, "Não foi possível criar a conta. Tente novamente.");
 
