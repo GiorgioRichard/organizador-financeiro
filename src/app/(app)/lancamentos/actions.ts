@@ -5,6 +5,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { exigirUsuario } from "@/lib/auth";
 import { ehDataISO, mesDe, somarMeses } from "@/lib/datas";
+import { falha, type EstadoForm } from "@/lib/formulario";
 import { parseBRLToCents, splitCents } from "@/lib/money";
 
 const comum = {
@@ -35,13 +36,12 @@ const lancamentoSchema = z.discriminatedUnion("tipo", [
     ...comum,
     transfer_to_account_id: z.uuid("Escolha a conta de destino"),
   }),
-]);
+], { error: "Escolha se é despesa, receita ou transferência" });
 
-function voltar(erro: string): never {
-  redirect(`/lancamentos/novo?erro=${encodeURIComponent(erro)}`);
-}
+type Lido = z.infer<typeof lancamentoSchema> & { valor_cents: number };
 
-export async function criarLancamento(formData: FormData) {
+/** Valida o formulário. Devolve os dados ou a mensagem de erro. */
+function ler(formData: FormData): Lido | string {
   const entrada = Object.fromEntries(
     ["tipo", "descricao", "valor", "data", "account_id", "category_id", "transfer_to_account_id", "parcelas"].map(
       (k) => [k, String(formData.get(k) ?? "")],
@@ -50,25 +50,32 @@ export async function criarLancamento(formData: FormData) {
   if (entrada.parcelas === "") entrada.parcelas = "1";
 
   const r = lancamentoSchema.safeParse(entrada);
-  if (!r.success) voltar(r.error.issues[0].message);
-  const l = r.data;
+  if (!r.success) return r.error.issues[0].message;
 
-  const valor_cents = parseBRLToCents(l.valor);
-  if (valor_cents === null) voltar("Valor inválido");
+  const valor_cents = parseBRLToCents(r.data.valor);
+  if (valor_cents === null) return "Valor inválido. Use, por exemplo, 150,90";
 
-  if (l.tipo === "transferencia" && l.transfer_to_account_id === l.account_id) {
-    voltar("Origem e destino precisam ser contas diferentes");
+  if (r.data.tipo === "transferencia" && r.data.transfer_to_account_id === r.data.account_id) {
+    return "Origem e destino precisam ser contas diferentes";
   }
+  return { ...r.data, valor_cents };
+}
 
-  const { supabase, user } = await exigirUsuario();
-  const base = {
-    user_id: user.id,
-    tipo: l.tipo,
+function camposComuns(l: Lido) {
+  return {
     descricao: l.descricao,
     account_id: l.account_id,
     category_id: l.tipo === "transferencia" ? null : l.category_id,
     transfer_to_account_id: l.tipo === "transferencia" ? l.transfer_to_account_id : null,
   };
+}
+
+export async function criarLancamento(_estado: EstadoForm, formData: FormData): Promise<EstadoForm> {
+  const l = ler(formData);
+  if (typeof l === "string") return falha(formData, l);
+
+  const { supabase, user } = await exigirUsuario();
+  const base = { user_id: user.id, tipo: l.tipo, ...camposComuns(l) };
 
   type Linha = typeof base & {
     valor_cents: number;
@@ -82,7 +89,7 @@ export async function criarLancamento(formData: FormData) {
     // Cada parcela cai no mesmo dia dos meses seguintes; a sobra de
     // centavos vai para a última. Um único insert grava todas ou nenhuma.
     const grupo = crypto.randomUUID();
-    linhas = splitCents(valor_cents, l.parcelas).map((v, i) => ({
+    linhas = splitCents(l.valor_cents, l.parcelas).map((v, i) => ({
       ...base,
       valor_cents: v,
       data: somarMeses(l.data, i),
@@ -91,14 +98,37 @@ export async function criarLancamento(formData: FormData) {
       parcela_total: l.parcelas,
     }));
   } else {
-    linhas = [{ ...base, valor_cents, data: l.data }];
+    linhas = [{ ...base, valor_cents: l.valor_cents, data: l.data }];
   }
 
   const { error } = await supabase.from("transactions").insert(linhas);
-  if (error) voltar("Não foi possível salvar o lançamento.");
+  if (error) return falha(formData, "Não foi possível salvar o lançamento. Tente de novo.");
 
   const ok = linhas.length > 1 ? `${linhas.length} parcelas lançadas.` : "Lançamento salvo.";
   redirect(`/lancamentos?mes=${mesDe(l.data)}&ok=${encodeURIComponent(ok)}`);
+}
+
+/**
+ * Edita um lançamento. O tipo não muda (mudaria o sentido do saldo);
+ * numa compra parcelada, só esta parcela é alterada.
+ */
+export async function editarLancamento(_estado: EstadoForm, formData: FormData): Promise<EstadoForm> {
+  const id = z.uuid().safeParse(formData.get("id"));
+  if (!id.success) return falha(formData, "Lançamento não encontrado");
+
+  const l = ler(formData);
+  if (typeof l === "string") return falha(formData, l);
+
+  const { supabase } = await exigirUsuario();
+  const { data, error } = await supabase
+    .from("transactions")
+    .update({ ...camposComuns(l), valor_cents: l.valor_cents, data: l.data })
+    .eq("id", id.data)
+    .eq("tipo", l.tipo)
+    .select("id");
+  if (error || !data?.length) return falha(formData, "Não foi possível salvar as alterações.");
+
+  redirect(`/lancamentos?mes=${mesDe(l.data)}&ok=${encodeURIComponent("Lançamento atualizado.")}`);
 }
 
 export async function excluirLancamento(formData: FormData) {

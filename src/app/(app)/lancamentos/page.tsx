@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Entrada } from "@/components/entrada";
 import { exigirUsuario } from "@/lib/auth";
 import { ehMes, formatarData, hojeISO, intervaloDoMes, mesDe, nomeDoMes, somarMesesAoMes } from "@/lib/datas";
 import { listarCategorias, listarContas, type Lancamento } from "@/lib/financas";
 import { formatCents, sumCents } from "@/lib/money";
-import { Aviso, Carregando, Indicador, Titulo, Valor, botaoPrimario } from "../ui";
+import { Aviso, BotaoPDF, Carregando, Indicador, Titulo, Valor, botaoPrimario } from "../ui";
 import { excluirLancamento } from "./actions";
 
 type SearchParams = Promise<{ mes?: string; erro?: string; ok?: string }>;
@@ -79,6 +79,8 @@ async function Conteudo({ searchParams }: { searchParams: SearchParams }) {
 
       <Aviso erro={params.erro} ok={params.ok} />
 
+      <BotaoPDF mes={mes} />
+
       <div className="grid grid-cols-3 gap-2">
         <Indicador titulo="Receitas">
           <Valor cents={receitas} />
@@ -142,8 +144,15 @@ async function Conteudo({ searchParams }: { searchParams: SearchParams }) {
                         <Valor cents={l.tipo === "receita" ? l.valor_cents : -l.valor_cents} sinal />
                       )}
                     </span>
-                    <form action={excluirLancamento} className="flex gap-2 text-xs text-musgo">
+                    <form action={excluirLancamento} className="flex gap-3 text-xs text-musgo">
                       <input type="hidden" name="id" value={l.id} />
+                      <Link
+                        href={`/lancamentos/${l.id}`}
+                        className="-m-2 inline-flex min-h-11 items-center gap-1 p-2 hover:text-tinta"
+                        aria-label={`Editar ${l.descricao}`}
+                      >
+                        <Pencil aria-hidden size={12} /> Editar
+                      </Link>
                       <button
                         type="submit"
                         className="-m-2 inline-flex min-h-11 items-center gap-1 p-2 hover:text-despesa"

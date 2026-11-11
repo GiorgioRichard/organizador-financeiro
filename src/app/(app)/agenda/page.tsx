@@ -116,7 +116,7 @@ async function Conteudo({ searchParams }: { searchParams: SearchParams }) {
           <Valor cents={-sumCents(lancamentos.filter((l) => l.tipo === "despesa").map((l) => l.valor_cents))} />
         </Indicador>
         <Indicador titulo="A vencer">
-          <span className="numero text-aviso">{formatCents(sumCents(pendentes.map((o) => o.valor_cents)))}</span>
+          <span className="numero text-aviso">{formatCents(sumCents(pendentes.filter((o) => o.tipo === "despesa").map((o) => o.valor_cents)))}</span>
         </Indicador>
       </div>
 
@@ -213,15 +213,15 @@ async function Conteudo({ searchParams }: { searchParams: SearchParams }) {
       {/* Vencimentos do mês */}
       <section aria-labelledby="vencimentos" className="vidro rounded-[var(--radius-cartao)] p-5">
         <div className="flex items-center justify-between">
-          <h2 id="vencimentos" className="text-sm text-musgo">Despesas fixas no mês</h2>
+          <h2 id="vencimentos" className="text-sm text-musgo">Fixas e recorrentes no mês</h2>
           <Link href="/agenda/fixas" className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4">
             Gerenciar
           </Link>
         </div>
         {vencimentos.length === 0 ? (
           <p className="text-sm text-musgo">
-            Nenhum vencimento neste mês. Cadastre IPTU, IPVA e outras em{" "}
-            <Link href="/agenda/fixas" className="underline">despesas fixas</Link>.
+            Nada previsto neste mês. Cadastre aluguel, salário, IPTU e outras em{" "}
+            <Link href="/agenda/fixas" className="underline">fixas e recorrentes</Link>.
           </p>
         ) : (
           <ul className="divide-y divide-linha">
@@ -236,7 +236,7 @@ async function Conteudo({ searchParams }: { searchParams: SearchParams }) {
 }
 
 function ItemVencimento({ o, paga, hoje, volta }: { o: Ocorrencia; paga: boolean; hoje: string; volta: string }) {
-  const atrasada = !paga && o.vencimento < hoje;
+  const atrasada = !paga && o.vencimento < hoje && o.tipo === "despesa";
   return (
     <li className="flex items-center gap-3 py-3">
       <div className="min-w-0 flex-1">
@@ -245,13 +245,14 @@ function ItemVencimento({ o, paga, hoje, volta }: { o: Ocorrencia; paga: boolean
           {o.parcelas > 1 && <span className="font-normal text-musgo"> {o.parcela}/{o.parcelas}</span>}
         </p>
         <p className={`text-xs ${atrasada ? "font-medium text-despesa" : "text-musgo"}`}>
-          {paga ? "Paga" : atrasada ? "Atrasada" : "Vence"} · {formatarData(o.vencimento)} · {formatCents(o.valor_cents)}
+          {paga ? (o.tipo === "receita" ? "Recebida" : "Paga") : atrasada ? "Atrasada" : o.tipo === "receita" ? (o.vencimento < hoje ? "A receber" : "Previsto") : "Vence"}
+          {` · ${formatarData(o.vencimento)} · ${formatCents(o.valor_cents)}`}
         </p>
       </div>
       {paga ? (
-        <span className="rounded-full bg-menta px-3 py-1.5 text-xs font-medium text-floresta">Paga</span>
+        <span className="rounded-full bg-menta px-3 py-1.5 text-xs font-medium text-floresta">{o.tipo === "receita" ? "Recebida" : "Paga"}</span>
       ) : (
-        <BotaoPagar fixaId={o.fixa_id} vencimento={o.vencimento} volta={volta} nome={o.nome} />
+        <BotaoPagar fixaId={o.fixa_id} vencimento={o.vencimento} volta={volta} nome={o.nome} receita={o.tipo === "receita"} />
       )}
     </li>
   );

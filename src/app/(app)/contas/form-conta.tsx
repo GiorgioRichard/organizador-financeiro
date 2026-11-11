@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { botaoPrimario, campo, rotulo } from "../ui";
+import { ESTADO_INICIAL, type AcaoForm } from "@/lib/formulario";
+import { Aviso, botaoPrimario, campo, rotulo } from "../ui";
 
 type Props = {
-  action: (formData: FormData) => Promise<void>;
+  action: AcaoForm;
   /** Preenchido ao editar. */
   conta?: {
     id: string;
@@ -27,16 +28,42 @@ const TIPOS = [
 ];
 
 export function FormConta({ action, conta }: Props) {
-  const [tipo, setTipo] = useState(conta?.tipo ?? "corrente");
+  const [estado, enviar] = useActionState(action, ESTADO_INICIAL);
+  const v = estado.valores;
+  // Depois de um erro, os campos voltam com o que foi digitado
+  const atual: Props["conta"] = v
+    ? {
+        id: v.id ?? "",
+        nome: v.nome ?? "",
+        tipo: v.tipo ?? conta?.tipo ?? "corrente",
+        saldo: v.saldo ?? "",
+        dia_fechamento: v.dia_fechamento ? Number(v.dia_fechamento) : null,
+        dia_vencimento: v.dia_vencimento ? Number(v.dia_vencimento) : null,
+        limite: v.limite ?? "",
+      }
+    : conta;
+
+  return (
+    <form action={enviar} className="flex flex-col gap-4">
+      <Aviso erro={estado.erro} />
+      <Campos key={estado.versao} conta={atual} editando={Boolean(conta)} />
+    </form>
+  );
+}
+
+function Campos({ conta: dados, editando }: { conta: Props["conta"]; editando: boolean }) {
+  const conta = editando ? dados : undefined;
+  const [tipo, setTipo] = useState(dados?.tipo ?? "corrente");
   const cartao = tipo === "cartao";
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <>
       {conta && <input type="hidden" name="id" value={conta.id} />}
 
+      {/* Fora do fieldset: campos de um fieldset desabilitado não são enviados */}
+      {conta && <input type="hidden" name="tipo" value={tipo} />}
       <fieldset disabled={!!conta}>
         <legend className="sr-only">Tipo</legend>
-        {conta && <input type="hidden" name="tipo" value={tipo} />}
         <div className="vidro flex rounded-full p-1">
           {TIPOS.map((t) => (
             <label
@@ -65,7 +92,7 @@ export function FormConta({ action, conta }: Props) {
             name="nome"
             required
             maxLength={60}
-            defaultValue={conta?.nome}
+            defaultValue={dados?.nome}
             placeholder={cartao ? "Ex.: Cartão do banco" : "Ex.: Banco, Carteira"}
             className={campo}
           />
@@ -75,23 +102,23 @@ export function FormConta({ action, conta }: Props) {
           <>
             <label className={rotulo}>
               Dia de fechamento
-              <input name="dia_fechamento" type="number" min={1} max={31} required defaultValue={conta?.dia_fechamento ?? ""} className={campo} />
+              <input name="dia_fechamento" type="number" min={1} max={31} required defaultValue={dados?.dia_fechamento ?? ""} className={campo} />
             </label>
             <label className={rotulo}>
               Dia de vencimento
-              <input name="dia_vencimento" type="number" min={1} max={31} required defaultValue={conta?.dia_vencimento ?? ""} className={campo} />
+              <input name="dia_vencimento" type="number" min={1} max={31} required defaultValue={dados?.dia_vencimento ?? ""} className={campo} />
             </label>
             <label className={`${rotulo} sm:col-span-2`}>
               <span>
                 Limite <span className="font-normal text-musgo">(opcional)</span>
               </span>
-              <input name="limite" inputMode="decimal" placeholder="5.000,00" defaultValue={conta?.limite} className={campo} />
+              <input name="limite" inputMode="decimal" placeholder="5.000,00" defaultValue={dados?.limite} className={campo} />
             </label>
           </>
         ) : (
           <label className={`${rotulo} sm:col-span-2`}>
             Saldo inicial
-            <input name="saldo" inputMode="decimal" placeholder="0,00" defaultValue={conta?.saldo} className={campo} />
+            <input name="saldo" inputMode="decimal" placeholder="0,00" defaultValue={dados?.saldo} className={campo} />
             <span className="text-xs font-normal text-musgo">Use “-” para saldo negativo.</span>
           </label>
         )}
@@ -100,6 +127,6 @@ export function FormConta({ action, conta }: Props) {
       <BotaoEnviar className={`${botaoPrimario} self-start`}>
         {conta ? "Salvar alterações" : "Adicionar conta"} <ArrowUpRight aria-hidden size={16} />
       </BotaoEnviar>
-    </form>
+    </>
   );
 }

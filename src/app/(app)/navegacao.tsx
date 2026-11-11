@@ -17,7 +17,7 @@ function abasDaSecao(caminho: string): Aba[] {
   if (caminho.startsWith("/agenda")) {
     return [
       { href: "/agenda", rotulo: "Calendário" },
-      { href: "/agenda/fixas", rotulo: "Fixas anuais" },
+      { href: "/agenda/fixas", rotulo: "Recorrentes" },
     ];
   }
   if (caminho.startsWith("/contas")) {
@@ -26,9 +26,15 @@ function abasDaSecao(caminho: string): Aba[] {
       { href: "/contas/nova", rotulo: "Nova" },
     ];
   }
+  if (caminho.startsWith("/orcamento")) {
+    return [
+      { href: "/orcamento", rotulo: "Orçamento" },
+      { href: "/orcamento/categorias", rotulo: "Categorias" },
+    ];
+  }
   return [
     { href: "/dashboard", rotulo: "Visão geral" },
-    { href: "/lancamentos", rotulo: "Mês" },
+    { href: "/orcamento", rotulo: "Orçamento" },
   ];
 }
 
@@ -59,7 +65,7 @@ export function Segmentado() {
 }
 
 const MENU: { href: string; rotulo: string; Icone: LucideIcon; ativo: (c: string) => boolean }[] = [
-  { href: "/dashboard", rotulo: "Início", Icone: House, ativo: (c) => c === "/dashboard" },
+  { href: "/dashboard", rotulo: "Início", Icone: House, ativo: (c) => c === "/dashboard" || c.startsWith("/orcamento") },
   {
     href: "/lancamentos",
     rotulo: "Extrato",

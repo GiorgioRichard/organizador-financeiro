@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Inter_Tight } from "next/font/google";
 import Script from "next/script";
 import { Movimento } from "@/components/movimento";
+import { RegistrarSW } from "@/components/registrar-sw";
 import "./globals.css";
 
 const interTight = Inter_Tight({
@@ -14,9 +15,14 @@ const interTight = Inter_Tight({
 export const metadata: Metadata = {
   title: "Organizador financeiro",
   description: "Controle seus gastos e despesas pessoais",
+  applicationName: "Organizador",
+  appleWebApp: { capable: true, title: "Organizador", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
+  // cover: ocupa a tela toda; as margens seguras ficam por conta do CSS (env(safe-area-inset-*))
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#eef1ee" },
     { media: "(prefers-color-scheme: dark)", color: "#0c1412" },
@@ -38,7 +44,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Script id="tema" strategy="beforeInteractive">
           {SCRIPT_TEMA}
         </Script>
-        <Movimento />
+        <Suspense fallback={null}>
+          <Movimento />
+        </Suspense>
+        <RegistrarSW />
         {children}
       </body>
     </html>

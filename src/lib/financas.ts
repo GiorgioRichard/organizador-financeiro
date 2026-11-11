@@ -77,7 +77,8 @@ export async function listarCategorias(supabase: SupabaseClient): Promise<Catego
 export async function listarFixas(supabase: SupabaseClient): Promise<DespesaFixa[]> {
   const { data, error } = await supabase
     .from("despesas_fixas")
-    .select("id, nome, valor_cents, category_id, account_id, mes, dia, parcelas, ativa")
+    .select("id, nome, tipo, frequencia, desde, valor_cents, category_id, account_id, mes, dia, parcelas, ativa")
+    .order("frequencia", { ascending: false })
     .order("mes")
     .order("dia");
   if (error) throw error;

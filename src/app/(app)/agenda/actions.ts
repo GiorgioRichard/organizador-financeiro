@@ -5,41 +5,53 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { exigirUsuario } from "@/lib/auth";
 import { ehDataISO } from "@/lib/datas";
-import { ocorrenciasDoAno, type DespesaFixa } from "@/lib/fixas";
+import { ocorrenciaEm, type DespesaFixa } from "@/lib/fixas";
+import { falha, type EstadoForm } from "@/lib/formulario";
 import { parseBRLToCents } from "@/lib/money";
 
 const fixaSchema = z.object({
-  nome: z.string().trim().min(1, "Dê um nome à despesa").max(60, "Nome muito longo"),
+  nome: z.string().trim().min(1, "Dê um nome").max(60, "Nome muito longo"),
+  tipo: z.enum(["despesa", "receita"], { message: "Escolha despesa ou receita" }),
+  frequencia: z.enum(["mensal", "anual"], { message: "Escolha a frequência" }),
   valor: z.string(),
   mes: z.coerce.number().int().min(1, "Escolha o mês").max(12, "Escolha o mês"),
   dia: z.coerce.number({ message: "Informe o dia" }).int().min(1, "Dia de 1 a 31").max(31, "Dia de 1 a 31"),
   parcelas: z.coerce.number().int().min(1, "Parcelas de 1 a 12").max(12, "Parcelas de 1 a 12"),
+  desde: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Escolha o mês de início"),
   account_id: z.uuid("Escolha a conta"),
   category_id: z.uuid("Escolha a categoria"),
 });
 
-function voltar(erro: string): never {
-  redirect(`/agenda/fixas?erro=${encodeURIComponent(erro)}`);
-}
-
-export async function criarFixa(formData: FormData) {
+export async function criarFixa(_estado: EstadoForm, formData: FormData): Promise<EstadoForm> {
   const entrada = Object.fromEntries(
-    ["nome", "valor", "mes", "dia", "parcelas", "account_id", "category_id"].map((k) => [k, String(formData.get(k) ?? "")]),
+    ["nome", "tipo", "frequencia", "valor", "mes", "dia", "parcelas", "desde", "account_id", "category_id"].map((k) => [
+      k,
+      String(formData.get(k) ?? ""),
+    ]),
   );
-  if (entrada.parcelas === "") entrada.parcelas = "1";
+  // Campos que só existem numa das frequências recebem um valor neutro
+  if (entrada.frequencia === "mensal") {
+    entrada.parcelas = "1";
+    entrada.mes = entrada.desde.slice(5, 7) || "1";
+  } else {
+    entrada.desde = entrada.desde || new Date().toISOString().slice(0, 7);
+    entrada.parcelas ||= "1";
+  }
   const r = fixaSchema.safeParse(entrada);
-  if (!r.success) voltar(r.error.issues[0].message);
+  if (!r.success) return falha(formData, r.error.issues[0].message);
 
   const valor_cents = parseBRLToCents(r.data.valor);
-  if (valor_cents === null) voltar("Valor inválido");
+  if (valor_cents === null) return falha(formData, "Valor inválido. Use, por exemplo, 1.200,00");
 
   const { supabase, user } = await exigirUsuario();
-  const { valor: _valor, ...campos } = r.data;
+  const { valor: _valor, desde, ...campos } = r.data;
   void _valor;
-  const { error } = await supabase.from("despesas_fixas").insert({ ...campos, valor_cents, user_id: user.id });
-  if (error) voltar("Não foi possível salvar a despesa fixa.");
+  const { error } = await supabase
+    .from("despesas_fixas")
+    .insert({ ...campos, valor_cents, desde: `${desde}-01`, user_id: user.id });
+  if (error) return falha(formData, "Não foi possível salvar. Confira a categoria e tente de novo.");
 
-  redirect(`/agenda/fixas?ok=${encodeURIComponent(`${r.data.nome} cadastrada.`)}`);
+  redirect(`/agenda/fixas?ok=${encodeURIComponent(`Cadastro salvo: ${r.data.nome}.`)}`);
 }
 
 export async function alternarFixa(formData: FormData) {
@@ -80,20 +92,17 @@ export async function pagarParcela(formData: FormData) {
   const { supabase, user } = await exigirUsuario();
   const { data: fixa } = await supabase
     .from("despesas_fixas")
-    .select("id, nome, valor_cents, category_id, account_id, mes, dia, parcelas, ativa")
+    .select("id, nome, tipo, frequencia, desde, valor_cents, category_id, account_id, mes, dia, parcelas, ativa")
     .eq("id", id.data)
     .maybeSingle<DespesaFixa>();
   if (!fixa) com("erro", "Despesa fixa não encontrada");
 
-  const ano = Number(vencimento.slice(0, 4));
-  const ocorrencia = [...ocorrenciasDoAno(fixa, ano), ...ocorrenciasDoAno(fixa, ano - 1)].find(
-    (o) => o.vencimento === vencimento,
-  );
+  const ocorrencia = ocorrenciaEm(fixa, vencimento);
   if (!ocorrencia) com("erro", "Essa data não é uma parcela");
 
   const { error } = await supabase.from("transactions").insert({
     user_id: user.id,
-    tipo: "despesa",
+    tipo: fixa.tipo,
     descricao: ocorrencia.parcelas > 1 ? `${fixa.nome} (${ocorrencia.parcela}/${ocorrencia.parcelas})` : fixa.nome,
     valor_cents: ocorrencia.valor_cents,
     data: vencimento,
@@ -103,7 +112,7 @@ export async function pagarParcela(formData: FormData) {
     fixa_vencimento: vencimento,
   });
   if (error) {
-    com("erro", error.code === "23505" ? "Essa parcela já está paga" : "Não foi possível registrar o pagamento");
+    com("erro", error.code === "23505" ? "Essa ocorrência já foi registrada" : "Não foi possível registrar o pagamento");
   }
-  com("ok", `${fixa.nome} marcada como paga.`);
+  com("ok", `${fixa.tipo === "receita" ? "Recebimento" : "Pagamento"} registrado: ${fixa.nome}.`);
 }

@@ -70,7 +70,7 @@
   --vidro-borda: light-dark(rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.09));
   --vidro-reflexo: light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.05));
   --branco-fundo: light-dark(rgb(255 255 255 / 0.92), rgb(22 34 30 / 0.92));
-  --menu-fundo: light-dark(rgb(255 255 255 / 0.6), rgb(16 26 23 / 0.78));
+  --menu-fundo: light-dark(rgb(250 251 249 / 0.88), rgb(16 26 23 / 0.9));
   --sombra: light-dark(rgb(15 59 51 / 0.2), rgb(0 0 0 / 0.45));
   --selo-texto: light-dark(#0f3b33, #d6ecdd);
   --selo-1: light-dark(#e8f3ec, #0f3b33);
@@ -91,10 +91,19 @@ body {
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
   background-color: var(--fundo-base);
+}
+
+/* Degradê numa camada fixa: fica parado ao rolar no Android e no iPhone
+   (o Safari do iOS ignora background-attachment: fixed). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
     radial-gradient(120% 60% at 50% 0%, var(--fundo-brilho) 0%, transparent 60%),
     linear-gradient(180deg, var(--fundo-1) 0%, var(--fundo-2) 38%, var(--fundo-3) 62%, var(--fundo-4) 84%, var(--fundo-5) 100%);
-  background-attachment: fixed;
 }
 
 @layer components {
@@ -112,6 +121,13 @@ body {
   /* Vidro do menu inferior: mais denso, porque passa por cima de cartões claros e escuros */
   .vidro-menu {
     background: var(--menu-fundo);
+  }
+
+  /* Sem desfoque (navegadores antigos, economia de bateria): vidro mais sólido para manter a leitura */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .vidro {
+      background: color-mix(in oklab, var(--superficie) 88%, transparent);
+    }
   }
 
   /* Cartão de conteúdo: branco no claro, verde-grafite no escuro */
@@ -145,6 +161,7 @@ body {
 
   .numero {
     font-variant-numeric: tabular-nums;
+    white-space: nowrap; /* "-R$ 400,00" nunca quebra no meio */
     letter-spacing: -0.04em;
   }
 }

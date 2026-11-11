@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { exigirUsuario } from "@/lib/auth";
+import { falha, type EstadoForm } from "@/lib/formulario";
 import { parseBRLToCents, parseSaldoToCents } from "@/lib/money";
 
 const dia = z.coerce
@@ -80,30 +81,25 @@ function lerConta(formData: FormData): { linha: Linha } | { erro: string } {
   };
 }
 
-function voltar(caminho: string, erro: string): never {
-  redirect(`${caminho}?erro=${encodeURIComponent(erro)}`);
-}
-
-export async function criarConta(formData: FormData) {
+export async function criarConta(_estado: EstadoForm, formData: FormData): Promise<EstadoForm> {
   const lido = lerConta(formData);
-  if ("erro" in lido) voltar("/contas/nova", lido.erro);
+  if ("erro" in lido) return falha(formData, lido.erro);
 
   const { supabase, user } = await exigirUsuario();
   const { error } = await supabase.from("accounts").insert({ ...lido.linha, user_id: user.id });
-  if (error) voltar("/contas/nova", "Não foi possível salvar a conta.");
+  if (error) return falha(formData, "Não foi possível salvar a conta. Tente de novo.");
 
   redirect(`/contas?ok=${encodeURIComponent("Conta criada.")}`);
 }
 
 const idSchema = z.uuid();
 
-export async function editarConta(formData: FormData) {
+export async function editarConta(_estado: EstadoForm, formData: FormData): Promise<EstadoForm> {
   const id = idSchema.safeParse(formData.get("id"));
-  if (!id.success) voltar("/contas", "Conta não encontrada.");
-  const caminho = `/contas/${id.data}`;
+  if (!id.success) return falha(formData, "Conta não encontrada.");
 
   const lido = lerConta(formData);
-  if ("erro" in lido) voltar(caminho, lido.erro);
+  if ("erro" in lido) return falha(formData, lido.erro);
 
   const { supabase } = await exigirUsuario();
   // O tipo não muda depois de criada: trocar cartão por conta mudaria o
@@ -115,7 +111,7 @@ export async function editarConta(formData: FormData) {
     .eq("tipo", tipo)
     .eq("id", id.data)
     .select("id");
-  if (error || data.length === 0) voltar(caminho, "Não foi possível salvar a conta.");
+  if (error || data.length === 0) return falha(formData, "Não foi possível salvar a conta.");
 
   redirect(`/contas?ok=${encodeURIComponent("Conta atualizada.")}`);
 }

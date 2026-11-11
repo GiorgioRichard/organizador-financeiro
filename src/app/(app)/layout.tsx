@@ -1,5 +1,6 @@
 import { Suspense, type ReactNode } from "react";
-import { LogOut } from "lucide-react";
+import Link from "next/link";
+import { KeyRound, LogOut } from "lucide-react";
 import { sair } from "@/app/auth/actions";
 import { Rodape } from "@/components/rodape";
 import { exigirUsuario } from "@/lib/auth";
@@ -16,8 +17,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       >
         Pular para o conteúdo
       </a>
-      <header className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 px-5 pt-5">
-        <Segmentado />
+      <header className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 px-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
+        {/* Lê a URL: precisa de Suspense para não travar a pré-renderização */}
+        <Suspense fallback={<div className="vidro h-11 w-44 rounded-full" />}>
+          <Segmentado />
+        </Suspense>
         <Suspense fallback={<div className="vidro size-12 rounded-full" />}>
           <Avatar />
         </Suspense>
@@ -26,7 +30,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <div className="pb-24">
         <Rodape />
       </div>
-      <MenuInferior />
+      <Suspense fallback={null}>
+        <MenuInferior />
+      </Suspense>
     </div>
   );
 }
@@ -55,7 +61,13 @@ async function Avatar() {
         <div className="mt-4">
           <SeletorTema />
         </div>
-        <form action={sair} className="mt-4">
+        <Link
+          href="/conta/senha"
+          className="mt-3 flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm hover:bg-tinta/5"
+        >
+          <KeyRound aria-hidden size={16} /> Alterar senha
+        </Link>
+        <form action={sair} className="mt-2">
           <button
             type="submit"
             className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-floresta px-4 text-sm font-medium text-sobre-floresta hover:bg-floresta-2"

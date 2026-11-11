@@ -84,6 +84,14 @@ npm test    # testes de money.ts e datas.ts (node --test, sem dependências)
 - Cadastro com nome, confirmação de senha e botão para mostrar a senha.
 - Tema claro/escuro (segue o sistema ou a escolha no menu do avatar).
 - Animações de entrada (GSAP) e rolagem suave (Lenis), desligadas com "reduzir movimento".
+- Recorrentes mensais (aluguel, salário) e anuais (IPTU, IPVA), com "Pagar"/"Receber".
+- Editar lançamentos e contas; formulários mantêm o que foi digitado quando há erro.
+- Orçamento por categoria (o limite vale do mês escolhido em diante) e resumo de gastos e receitas.
+- Gerenciar categorias (criar, renomear, excluir as que não estão em uso).
+- Recuperar senha por e-mail e trocar a senha pelo menu do avatar.
+- PWA: instalável, ícones próprios, atalhos e tela "Sem conexão".
+- Relatório mensal em PDF (botão "Relatório PDF" no Extrato e no Orçamento).
+- Testado como iPhone 15 (WebKit, motor do Safari) e Pixel 7 (Chrome Android): sem rolagem lateral, campos com 16px (sem zoom no iPhone), área segura do notch, PDF e service worker funcionando.
 
 ## Leis de UX aplicadas
 
@@ -104,12 +112,26 @@ Acessibilidade: link "Pular para o conteúdo", rótulos em todos os campos, foco
 avisos com `role="alert"`/`status`, dias do calendário com descrição completa para leitor
 de tela, contraste nos dois temas e respeito a "reduzir movimento".
 
+## PWA (instalar como app)
+
+O service worker só é registrado na versão de produção:
+
+```bash
+npm run build
+npm run start
+```
+
+No computador, abra http://localhost:3000 no Chrome ou Edge e use "Instalar app" na barra de
+endereço. Para testar a tela offline: DevTools → Application → Service workers → Offline.
+
+No celular, o navegador só instala PWAs servidos por **HTTPS**. Para usar no telefone, publique
+o app (por exemplo na Vercel) com um projeto Supabase na nuvem e abra o endereço https.
+
+O app guarda só os arquivos da interface; saldos e lançamentos sempre vêm do servidor, para
+nunca mostrar dados financeiros desatualizados.
+
 ## Próximas etapas
 
-- Recuperar senha por e-mail (o Supabase local já tem caixa de e-mails em http://127.0.0.1:54324).
-
-- Editar lançamentos (hoje só é possível excluir e lançar de novo).
-- Manter o que foi digitado quando o formulário volta com erro.
-- Lançamentos recorrentes (ex.: aluguel todo mês).
-- Orçamento mensal por categoria (a tabela `budgets` já existe) e resumo por categoria.
-- Gerenciar categorias.
+- Publicar (Vercel + Supabase na nuvem) para instalar no celular.
+- Notificações de vencimento (o PWA já permite Web Push).
+- Exportar lançamentos em CSV.

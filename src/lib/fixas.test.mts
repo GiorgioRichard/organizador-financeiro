@@ -1,10 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ocorrenciasDoAno, ocorrenciasNoIntervalo, type DespesaFixa } from "./fixas.ts";
+import { ocorrenciaEm, ocorrenciasDoAno, ocorrenciasNoIntervalo, type DespesaFixa } from "./fixas.ts";
 
 const base: DespesaFixa = {
   id: "f1",
   nome: "IPTU",
+  tipo: "despesa",
+  frequencia: "anual",
+  desde: "2026-01-01",
   valor_cents: 100000,
   category_id: "c",
   account_id: "a",
@@ -40,4 +43,22 @@ test("ciclo que começa em novembro aparece em janeiro do ano seguinte", () => {
 
 test("despesa inativa não gera ocorrências", () => {
   assert.equal(ocorrenciasNoIntervalo([{ ...base, ativa: false }], "2027-01-01", "2027-12-31").length, 0);
+});
+
+test("mensal: todo mês no dia, a partir de desde", () => {
+  const aluguel = { ...base, id: "m1", nome: "Aluguel", frequencia: "mensal" as const, dia: 31, desde: "2026-11-15" };
+  const os = ocorrenciasNoIntervalo([aluguel], "2026-10-01", "2027-02-28");
+  assert.deepEqual(os.map((o) => o.vencimento), ["2026-11-30", "2026-12-31", "2027-01-31", "2027-02-28"]);
+  assert.ok(os.every((o) => o.valor_cents === 100000));
+});
+
+test("mensal: o mês de início conta mesmo se o dia já passou", () => {
+  const salario = { ...base, tipo: "receita" as const, frequencia: "mensal" as const, dia: 5, desde: "2026-11-20" };
+  assert.equal(ocorrenciasNoIntervalo([salario], "2026-11-01", "2026-11-30")[0]?.vencimento, "2026-11-05");
+  assert.equal(ocorrenciasNoIntervalo([salario], "2026-11-01", "2026-11-30")[0]?.tipo, "receita");
+});
+
+test("ocorrenciaEm confere a data exata", () => {
+  assert.equal(ocorrenciaEm(base, "2027-02-10")?.valor_cents, 100000);
+  assert.equal(ocorrenciaEm(base, "2027-02-11"), undefined);
 });

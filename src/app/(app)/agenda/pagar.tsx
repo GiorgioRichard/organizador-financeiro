@@ -2,8 +2,20 @@ import { Check } from "lucide-react";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { pagarParcela } from "./actions";
 
-/** Botão "Pagar" de uma parcela de despesa fixa. */
-export function BotaoPagar({ fixaId, vencimento, volta, nome }: { fixaId: string; vencimento: string; volta: string; nome: string }) {
+/** Botão "Pagar" (ou "Receber") de uma ocorrência fixa ou recorrente. */
+export function BotaoPagar({
+  fixaId,
+  vencimento,
+  volta,
+  nome,
+  receita = false,
+}: {
+  fixaId: string;
+  vencimento: string;
+  volta: string;
+  nome: string;
+  receita?: boolean;
+}) {
   return (
     <form action={pagarParcela}>
       <input type="hidden" name="fixa_id" value={fixaId} />
@@ -15,7 +27,7 @@ export function BotaoPagar({ fixaId, vencimento, volta, nome }: { fixaId: string
       >
         <Check aria-hidden size={14} />
         <span>
-          Pagar<span className="sr-only"> {nome}</span>
+          {receita ? "Receber" : "Pagar"}<span className="sr-only"> {nome}</span>
         </span>
       </BotaoEnviar>
     </form>

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const ROTAS_PUBLICAS = ["/login", "/auth"];
+const ROTAS_PUBLICAS = ["/login", "/auth", "/offline"];
 
 /**
  * Renova a sessão do Supabase em cada requisição e protege as rotas privadas.
@@ -60,6 +60,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Fora da proxy: arquivos estáticos e os do PWA (manifesto, service worker, ícones)
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icon|apple-icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

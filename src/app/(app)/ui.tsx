@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
+import { FileDown } from "lucide-react";
 import { formatCents } from "@/lib/money";
 
 /** Estilos compartilhados dos formulários e botões das telas privadas. */
 export const campo =
-  "w-full rounded-2xl border border-superficie bg-superficie/80 px-4 py-3 text-[15px] font-normal text-tinta placeholder:text-musgo/60 focus:bg-superficie focus:outline-none focus:ring-2 focus:ring-floresta/40";
+  "w-full rounded-2xl border border-superficie bg-superficie/80 px-4 py-3 text-base font-normal text-tinta placeholder:text-musgo/60 focus:bg-superficie focus:outline-none focus:ring-2 focus:ring-floresta/40";
 export const rotulo = "flex flex-col gap-1.5 text-sm font-medium text-tinta";
 export const botaoPrimario =
   "inline-flex items-center justify-center gap-2 rounded-full bg-floresta px-5 py-3 text-sm font-medium text-sobre-floresta shadow-[0_10px_24px_-12px_rgb(15_59_51/0.7)] transition hover:bg-floresta-2";
@@ -77,8 +78,21 @@ export function Indicador({ titulo, children }: { titulo: string; children: Reac
   return (
     <div className="vidro rounded-3xl px-4 py-3">
       <p className="text-xs text-musgo">{titulo}</p>
-      <p className="mt-0.5 text-lg font-medium">{children}</p>
+      <p className="mt-0.5 text-[0.95rem] font-medium sm:text-lg">{children}</p>
     </div>
+  );
+}
+
+/** Baixa o relatório do mês em PDF (gerado no servidor). */
+export function BotaoPDF({ mes }: { mes: string }) {
+  return (
+    <a
+      href={`/relatorio/pdf?mes=${mes}`}
+      download={`relatorio-${mes}.pdf`}
+      className="vidro inline-flex min-h-11 items-center gap-2 self-start rounded-full px-4 text-sm font-medium hover:bg-superficie"
+    >
+      <FileDown aria-hidden size={16} /> Relatório PDF
+    </a>
   );
 }
 
