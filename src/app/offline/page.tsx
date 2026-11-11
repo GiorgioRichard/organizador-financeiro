@@ -10,7 +10,7 @@ export default function OfflinePage() {
       <span className="vidro grid size-16 place-items-center rounded-full text-floresta">
         <WifiOff aria-hidden size={26} />
       </span>
-      <h1 className="text-[2rem] font-medium leading-tight tracking-[-0.035em]">Sem conexão</h1>
+      <h1 className="text-[2rem] font-medium leading-tight deitado:text-2xl tracking-[-0.035em]">Sem conexão</h1>
       <p className="text-sm text-musgo">
         Seus dados ficam no servidor, então é preciso internet para ver saldos e lançamentos. Assim que a
         conexão voltar, toque em tentar de novo.

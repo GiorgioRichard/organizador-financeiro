@@ -93,7 +93,7 @@ async function Conteudo({ searchParams }: { searchParams: SearchParams }) {
     <Entrada className="flex flex-col gap-5">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-[2rem] font-medium leading-tight tracking-[-0.035em] first-letter:uppercase">{titulo}</h1>
+          <h1 className="text-[2rem] font-medium leading-tight deitado:text-2xl tracking-[-0.035em] first-letter:uppercase">{titulo}</h1>
           <p className="mt-1 text-sm text-musgo">Toque num dia para ver e lançar</p>
         </div>
         <nav aria-label="Mês" className="flex gap-2">

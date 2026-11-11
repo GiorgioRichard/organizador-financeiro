@@ -49,7 +49,7 @@ async function FormularioLogin({ searchParams }: { searchParams: SearchParams })
       </nav>
 
       <header>
-        <h1 className="text-[2rem] font-medium leading-tight tracking-[-0.035em]">{titulo}</h1>
+        <h1 className="text-[2rem] font-medium leading-tight deitado:text-2xl tracking-[-0.035em]">{titulo}</h1>
         <p className="mt-1 text-sm text-musgo">{subtitulo}</p>
       </header>
 

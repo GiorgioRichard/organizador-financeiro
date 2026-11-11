@@ -10,7 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",
-    orientation: "portrait",
+    // Sem trava de orientação: o app segue o aparelho (em pé ou deitado).
+    orientation: "any",
     background_color: "#eef1ee",
     theme_color: "#0f3b33",
     categories: ["finance", "productivity"],

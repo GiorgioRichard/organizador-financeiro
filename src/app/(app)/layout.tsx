@@ -17,7 +17,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       >
         Pular para o conteúdo
       </a>
-      <header className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 px-5 pt-[max(1.25rem,env(safe-area-inset-top))]">
+      <header className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3 px-5 pt-[max(1.25rem,env(safe-area-inset-top))] deitado:pt-3 deitado:pr-20">
         {/* Lê a URL: precisa de Suspense para não travar a pré-renderização */}
         <Suspense fallback={<div className="vidro h-11 w-44 rounded-full" />}>
           <Segmentado />
@@ -26,8 +26,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <Avatar />
         </Suspense>
       </header>
-      <div className="mx-auto w-full max-w-2xl flex-1 px-5 pt-6">{children}</div>
-      <div className="pb-24">
+      <div className="mx-auto w-full max-w-2xl flex-1 px-5 pt-6 deitado:pr-20 deitado:pt-4">{children}</div>
+      <div className="pb-24 deitado:pb-4 deitado:pr-16">
         <Rodape />
       </div>
       <Suspense fallback={null}>
