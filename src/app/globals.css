@@ -1,26 +1,186 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/*
+ * Tema "sálvia" em duas versões. Segue o sistema, ou a escolha feita no
+ * menu do avatar (atributo data-tema no <html>).
+ *
+ * Claro: fundo claro que esquenta para bege e desce para verde sálvia,
+ * vidro branco, verde-floresta como cor principal e o cartão de destaque
+ * verde-escuro.
+ *
+ * Escuro: as mesmas cores com os papéis invertidos. O fundo vira verde
+ * quase preto (com o mesmo toque quente no meio e sálvia escuro embaixo),
+ * o vidro fica escuro, a cor principal passa a ser o menta claro com
+ * texto escuro e o cartão de destaque vira menta claro.
+ *
+ * Os componentes usam só os tokens abaixo (tinta, superficie, floresta,
+ * cartao...), nunca branco ou hex fixo, para valer nos dois temas.
+ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+
+  --color-tinta: var(--tinta);                 /* texto principal */
+  --color-musgo: var(--musgo);                 /* texto secundário */
+  --color-linha: var(--linha);                 /* divisórias */
+  --color-superficie: var(--superficie);       /* pílula ativa, campos, botão claro */
+  --color-floresta: var(--floresta);           /* cor principal (botões, avatar) */
+  --color-floresta-2: var(--floresta-2);       /* hover da principal */
+  --color-sobre-floresta: var(--sobre-floresta); /* texto sobre a principal */
+  --color-menta: var(--menta);                 /* destaque (botão menta, checks) */
+  --color-menta-forte: var(--menta-forte);
+  --color-cartao: var(--cartao);               /* texto do cartão de destaque */
+  --color-cartao-fundo: var(--cartao-fundo);   /* cor base do cartão de destaque */
+  --color-receita: var(--receita);
+  --color-despesa: var(--despesa);
+  --color-despesa-suave: var(--despesa-suave);
+  --color-aviso: var(--aviso);                 /* a vencer */
+
+  --radius-cartao: 1.75rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* light-dark(claro, escuro): o valor usado segue o color-scheme abaixo */
+  color-scheme: light dark;
+
+  --tinta: light-dark(#0f1f1b, #e6eee8);
+  --musgo: light-dark(#5f6f68, #93a59b);
+  --linha: light-dark(rgb(15 31 27 / 0.08), rgb(230 238 232 / 0.09));
+  --superficie: light-dark(#ffffff, #1b2925);
+  --floresta: light-dark(#0f3b33, #cfe8d7);
+  --floresta-2: light-dark(#17493f, #b6dbc2);
+  --sobre-floresta: light-dark(#ffffff, #0d2a23);
+  --menta: light-dark(#b3dbbf, #1f4a3f);
+  --menta-forte: light-dark(#7fbf95, #2c6656);
+  --cartao: light-dark(#ffffff, #0f3b33);
+  --cartao-fundo: light-dark(#0f3b33, #d6ecdd);
+  --cartao-fundo-2: light-dark(#17493f, #b3d7bf);
+  --cartao-pontos: light-dark(rgb(255 255 255 / 0.13), rgb(15 59 51 / 0.14));
+  --receita: light-dark(#1f7a52, #7fd3a2);
+  --despesa: light-dark(#b0473b, #f19484);
+  --despesa-suave: light-dark(#f6e1dd, #3a201c);
+  --aviso: light-dark(#a1661a, #f0c26b);
+  --fundo-base: light-dark(#dfe4dc, #101a17);
+  --fundo-brilho: light-dark(#f4f6f4, #1a2622);
+  --fundo-1: light-dark(#eef1ee, #0c1412);
+  --fundo-2: light-dark(#e9ebe4, #111b18);
+  --fundo-3: light-dark(#e7e1cc, #1c1d15);
+  --fundo-4: light-dark(#c3cdb1, #1c2a1f);
+  --fundo-5: light-dark(#a8b896, #233524);
+  --vidro-fundo: light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.05));
+  --vidro-borda: light-dark(rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.09));
+  --vidro-reflexo: light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.05));
+  --branco-fundo: light-dark(rgb(255 255 255 / 0.92), rgb(22 34 30 / 0.92));
+  --menu-fundo: light-dark(rgb(255 255 255 / 0.6), rgb(16 26 23 / 0.78));
+  --sombra: light-dark(rgb(15 59 51 / 0.2), rgb(0 0 0 / 0.45));
+  --selo-texto: light-dark(#0f3b33, #d6ecdd);
+  --selo-1: light-dark(#e8f3ec, #0f3b33);
+  --selo-2: light-dark(#b9d8c6, #1d5547);
+}
+
+/* Escolha manual no menu do avatar (sem atributo = segue o sistema) */
+:root[data-tema="claro"] {
+  color-scheme: light;
+}
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+}
+
+
+body {
+  color: var(--tinta);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  background-color: var(--fundo-base);
+  background-image:
+    radial-gradient(120% 60% at 50% 0%, var(--fundo-brilho) 0%, transparent 60%),
+    linear-gradient(180deg, var(--fundo-1) 0%, var(--fundo-2) 38%, var(--fundo-3) 62%, var(--fundo-4) 84%, var(--fundo-5) 100%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Vidro fosco: cartões e pílulas sobre o fundo em degradê */
+  .vidro {
+    background: var(--vidro-fundo);
+    border: 1px solid var(--vidro-borda);
+    box-shadow:
+      0 1px 0 var(--vidro-reflexo) inset,
+      0 10px 30px -12px var(--sombra);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  }
+
+  /* Vidro do menu inferior: mais denso, porque passa por cima de cartões claros e escuros */
+  .vidro-menu {
+    background: var(--menu-fundo);
+  }
+
+  /* Cartão de conteúdo: branco no claro, verde-grafite no escuro */
+  .cartao-branco {
+    background: var(--branco-fundo);
+    box-shadow: 0 12px 32px -14px var(--sombra);
+  }
+
+  /* Cartão de destaque: verde-escuro no claro, menta no escuro, com pontos à direita */
+  .cartao-escuro {
+    position: relative;
+    overflow: hidden;
+    color: var(--cartao);
+    background: linear-gradient(135deg, var(--cartao-fundo) 0%, var(--cartao-fundo-2) 100%);
+  }
+  .cartao-escuro::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(var(--cartao-pontos) 1px, transparent 1.2px);
+    background-size: 5px 5px;
+    mask-image: linear-gradient(115deg, transparent 35%, #000 85%);
+    pointer-events: none;
+  }
+
+  /* Selo do mês no cartão de saldo */
+  .selo {
+    background: linear-gradient(135deg, var(--selo-1), var(--selo-2));
+    color: var(--selo-texto);
+  }
+
+  .numero {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Sombra suave da pílula ativa; utilitário para aceitar variantes (has-[:checked]:) */
+@utility sombra-suave {
+  box-shadow: 0 2px 8px -2px var(--sombra);
+}
+
+/*
+ * Entrada das telas (componente Entrada, com GSAP): os filhos começam
+ * ocultos só quando o script inicial marcou <html class="anima">. Se o
+ * JavaScript não rodar a tempo, aparecem sozinhos depois de 1,2s.
+ */
+html.anima [data-entrada] > * {
+  opacity: 0;
+  animation: revelar 0s 1.2s forwards;
+}
+@keyframes revelar {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--floresta);
+  outline-offset: 2px;
 }

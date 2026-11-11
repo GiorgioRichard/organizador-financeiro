@@ -1,36 +1,115 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Organizador financeiro pessoal
 
-## Getting Started
+Aplicativo web para lançar receitas, despesas e transferências, controlar contas e cartões
+e acompanhar o orçamento mensal por categoria. Sem conexão com bancos e sem serviços externos
+de dados financeiros.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router) + **TypeScript**
+- **Supabase** (Postgres, Auth e Row Level Security)
+- **Zod** para validação de entradas
+- **Tailwind CSS** para a interface
+
+## Regras de cálculo
+
+- Valores em **centavos** (`bigint`) no banco e na aplicação. Nunca `float`.
+- **Transferência não é despesa**: só movimenta saldo entre contas próprias.
+- **Cartão**: a compra é registrada na data em que ocorreu. Pagar a fatura é transferência
+  da conta corrente para o cartão.
+- **Parcelamento**: a diferença de centavos vai para a última parcela (`splitCents`).
+
+## Segurança
+
+- RLS ativo em todas as tabelas, com `user_id = auth.uid()` para leitura, escrita e exclusão.
+- Chaves compostas `(id, user_id)` impedem que um lançamento use conta ou categoria de outro usuário.
+- Acesso anônimo revogado nas tabelas de dados.
+- Somente a chave **anon** é usada no cliente. A `service_role` nunca entra no projeto.
+- `proxy.ts` renova a sessão e protege as rotas privadas. O Painel verifica o usuário de novo.
+- Cabeçalhos de segurança configurados em `next.config.ts`.
+
+## Como rodar (Supabase local)
+
+Pré-requisitos: Docker em execução e Node.js 20+.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:start      # sobe o Supabase local (Postgres, Auth, Studio, etc.)
+npm run db:status     # mostra API URL e anon key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Copie `.env.example` para `.env.local`.
+2. Preencha `NEXT_PUBLIC_SUPABASE_ANON_KEY` com a *anon key* exibida por `npm run db:status`.
+3. Aplique as migrações do zero: `npm run db:reset`.
+4. Rode a aplicação: `npm run dev` e acesse http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Painel do banco local (Supabase Studio): http://127.0.0.1:54323
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Para parar: `npm run db:stop`.
 
-## Learn More
+Projeto na nuvem: crie o projeto no Supabase, rode `npx supabase link --project-ref <ref>`
+e depois `npx supabase db push`, ou cole a migração no SQL Editor.
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+supabase/migrations/     schema, constraints, RLS, seed de categorias e saldos_contas()
+src/lib/money.ts         conversão e formatação de valores em centavos
+src/lib/datas.ts         datas ISO no fuso de São Paulo e ciclo de fatura do cartão
+src/lib/financas.ts      consultas: contas, categorias, saldos e fatura atual
+src/lib/auth.ts          exigirUsuario(): cliente + usuário, ou volta ao login
+src/lib/supabase/        clientes Supabase (servidor e navegador)
+src/proxy.ts             sessão e proteção de rotas
+src/app/auth/actions.ts  entrar, cadastrar e sair (Server Actions)
+src/app/login/           tela de login e cadastro
+src/app/(app)/           telas privadas, com menu comum (layout.tsx)
+  dashboard/             saldo em contas, faturas e resumo do mês
+  contas/                contas e cartões: criar, editar, arquivar
+  lancamentos/           lista por mês, novo lançamento, parcelas, exclusão
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Testes
 
-## Deploy on Vercel
+```bash
+npm test    # testes de money.ts e datas.ts (node --test, sem dependências)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Feito
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Contas e cartões (criar, editar, arquivar) com ciclo de fatura por dia de fechamento.
+- Lançamentos de receita, despesa e transferência, com parcelamento de despesas.
+- Painel com saldo em contas, faturas atuais e resultado do mês.
+- Despesas fixas anuais (IPTU, IPVA...) à vista ou em até 12x, com "Pagar" por parcela.
+- Agenda: calendário do mês com receitas, despesas e vencimentos; lançar direto num dia.
+- Cadastro com nome, confirmação de senha e botão para mostrar a senha.
+- Tema claro/escuro (segue o sistema ou a escolha no menu do avatar).
+- Animações de entrada (GSAP) e rolagem suave (Lenis), desligadas com "reduzir movimento".
+
+## Leis de UX aplicadas
+
+| Lei | Onde |
+| --- | --- |
+| Jakob | Padrões conhecidos de apps de banco: menu inferior, calendário mensal, pílulas de abas. |
+| Fitts | Alvos de toque com no mínimo 44px (menu, botões de excluir, dias do calendário). |
+| Hick | Poucas opções por tela; formulários mostram só os campos do tipo escolhido. |
+| Miller | Informação em blocos curtos: três indicadores por mês, listas por seção. |
+| Postel | Valores aceitos como "1.200", "1200,00" ou "R$ 1.200"; dia 31 vira o último dia do mês. |
+| Tesler | Padrões prontos: data de hoje, sugestões de IPTU/IPVA que já escolhem a categoria. |
+| Doherty | Botões mostram "Salvando…" na hora e ficam bloqueados contra clique duplo. |
+| Von Restorff | Uma ação principal por tela em destaque; "a vencer" em âmbar, atrasadas em vermelho. |
+| Pico-final | Mensagem de sucesso ao salvar ou pagar; entrada animada das telas. |
+| Estética-usabilidade | Visual consistente (vidro, cartões, tipografia) nos dois temas. |
+
+Acessibilidade: link "Pular para o conteúdo", rótulos em todos os campos, foco visível,
+avisos com `role="alert"`/`status`, dias do calendário com descrição completa para leitor
+de tela, contraste nos dois temas e respeito a "reduzir movimento".
+
+## Próximas etapas
+
+- Recuperar senha por e-mail (o Supabase local já tem caixa de e-mails em http://127.0.0.1:54324).
+
+- Editar lançamentos (hoje só é possível excluir e lançar de novo).
+- Manter o que foi digitado quando o formulário volta com erro.
+- Lançamentos recorrentes (ex.: aluguel todo mês).
+- Orçamento mensal por categoria (a tabela `budgets` já existe) e resumo por categoria.
+- Gerenciar categorias.
