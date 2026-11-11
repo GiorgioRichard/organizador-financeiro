@@ -16,6 +16,14 @@ export const metadata: Metadata = {
   title: "Organizador financeiro",
   description: "Controle seus gastos e despesas pessoais",
   applicationName: "Organizador",
+  icons: {
+    icon: [
+      { url: "/icones/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icones/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icones/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icones/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   appleWebApp: { capable: true, title: "Organizador", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };

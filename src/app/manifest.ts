@@ -15,13 +15,13 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#0f3b33",
     categories: ["finance", "productivity"],
     icons: [
-      { src: "/icon/192", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icon/512", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icon/mascaravel", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icones/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icones/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icones/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     shortcuts: [
-      { name: "Novo lançamento", url: "/lancamentos/novo", icons: [{ src: "/icon/192", sizes: "192x192" }] },
-      { name: "Agenda", url: "/agenda", icons: [{ src: "/icon/192", sizes: "192x192" }] },
+      { name: "Novo lançamento", url: "/lancamentos/novo", icons: [{ src: "/icones/icon-192.png", sizes: "192x192" }] },
+      { name: "Agenda", url: "/agenda", icons: [{ src: "/icones/icon-192.png", sizes: "192x192" }] },
     ],
   };
 }

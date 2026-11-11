@@ -5,14 +5,14 @@
  *    sem conexão, mostra a tela /offline.
  *  - Nada de POST, ações do servidor ou chamadas a outros domínios.
  */
-const VERSAO = "organizador-v1";
+const VERSAO = "organizador-v2"; // v2: ícone novo (limpa o cache antigo)
 const OFFLINE = "/offline";
 
 self.addEventListener("install", (evento) => {
   evento.waitUntil(
     caches
       .open(VERSAO)
-      .then((cache) => cache.addAll([OFFLINE, "/icon/192", "/icon/512"]))
+      .then((cache) => cache.addAll([OFFLINE, "/icones/icon-192.png", "/icones/icon-512.png"]))
       .then(() => self.skipWaiting()),
   );
 });
@@ -33,7 +33,7 @@ self.addEventListener("fetch", (evento) => {
   if (url.origin !== self.location.origin) return;
 
   // Arquivos com hash no nome nunca mudam: cache primeiro
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icon/") || url.pathname === "/apple-icon") {
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icones/")) {
     evento.respondWith(
       caches.match(pedido).then(
         (salvo) =>
